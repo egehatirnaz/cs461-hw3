@@ -240,27 +240,31 @@ class Game:
             if self.player_turn == 'X':
 
                 while True:
+                    print("It's X's turn!")
                     start = time.time()
                     (m, qx, qy) = self.min_alpha_beta(-2, 2)
                     end = time.time()
                     print('Evaluation time: {}s'.format(round(end - start, 7)))
                     print('Recommended move: X = {}, Y = {}'.format(qx, qy))
 
-                    px = int(input('Insert the X coordinate: '))
-                    py = int(input('Insert the Y coordinate: '))
+                    #px = int(input('Insert the X coordinate: '))
+                    #py = int(input('Insert the Y coordinate: '))
+                    print("Playing the recommended move...")
 
-                    qx = px
-                    qy = py
+                    #qx = px
+                    #qy = py
 
-                    if self.is_valid(px, py):
-                        self.current_state[px][py] = 'X'
+                    if self.is_valid(qx, qy):
+                        self.current_state[qx][qy] = 'X'
                         self.player_turn = 'O'
                         break
                     else:
                         print('The move is not valid! Try again.')
 
             else:
+                print("It's 0's turn!")
                 (m, px, py) = self.max_alpha_beta(-2, 2)
+                print('Playing move: X = {}, Y = {}'.format(px, py))
                 self.current_state[px][py] = 'O'
                 self.player_turn = 'X'
 

@@ -1,323 +1,256 @@
 import time
 
+
 class Game:
     def __init__(self):
-        self.initialize_game()
-        self.current_state = [['.', '.', '.'],
-                              ['.', '.', '.'],
-                              ['.', '.', '.']]
+        self.turn = 'X'
+        self.state = [['.', '.', '.'],
+                      ['.', '.', '.'],
+                      ['.', '.', '.']]
+        self.result = None
 
-        # Player X always plays first
-        self.player_turn = 'X'
-
-    def initialize_game(self):
-        self.current_state = [['.', '.', '.'],
-                              ['.', '.', '.'],
-                              ['.', '.', '.']]
-
-        # Player X always plays first
-        self.player_turn = 'X'
-
-    def draw_board(self):
+    def print_state(self):
+        #print("\n")
         for i in range(0, 3):
             for j in range(0, 3):
-                print('{}|'.format(self.current_state[i][j]), end=" ")
-            print()
-        print()
+                if j < 2:
+                    print('{} |'.format(self.state[i][j]), end=" ")
+                else:
+                    print('{} '.format(self.state[i][j]), end=" ")
+            if i < 2:
+                print("\n----------")
+        print("\n")
 
-    # Determines if the made move is a legal move
-    def is_valid(self, px, py):
-        if px < 0 or px > 2 or py < 0 or py > 2:
+    # Is the move valid?
+    def is_valid(self, x, y):
+        if x < 0 or x > 2 or y < 0 or y > 2:  # Out of bounds.
             return False
-        elif self.current_state[px][py] != '.':
+        elif self.state[x][y] != '.':  # Position is filled already.
             return False
         else:
             return True
 
-    # Checks if the game has ended and returns the winner in each case
-    def is_end(self):
-        # Vertical win
+    # is the game over? if so who won?
+    def check_end(self):
+        # horizontal win
         for i in range(0, 3):
-            if (self.current_state[0][i] != '.' and
-                    self.current_state[0][i] == self.current_state[1][i] and
-                    self.current_state[1][i] == self.current_state[2][i]):
-                return self.current_state[0][i]
-
-        # Horizontal win
-        for i in range(0, 3):
-            if self.current_state[i] == ['X', 'X', 'X']:
+            if self.state[i] == ['X', 'X', 'X']:
                 return 'X'
-            elif self.current_state[i] == ['O', 'O', 'O']:
+            elif self.state[i] == ['O', 'O', 'O']:
                 return 'O'
-
-        # Main diagonal win
-        if (self.current_state[0][0] != '.' and
-                self.current_state[0][0] == self.current_state[1][1] and
-                self.current_state[0][0] == self.current_state[2][2]):
-            return self.current_state[0][0]
-
-        # Second diagonal win
-        if (self.current_state[0][2] != '.' and
-                self.current_state[0][2] == self.current_state[1][1] and
-                self.current_state[0][2] == self.current_state[2][0]):
-            return self.current_state[0][2]
-
-        # Is whole board full?
+        # vertical win
+        for i in range(0, 3):
+            if (self.state[0][i] != '.' and
+                    self.state[0][i] == self.state[1][i] and
+                    self.state[1][i] == self.state[2][i]):
+                return self.state[0][i]
+        # diag1 win
+        if (self.state[0][0] != '.' and
+                self.state[0][0] == self.state[1][1] and
+                self.state[0][0] == self.state[2][2]):
+            return self.state[0][0]
+        # diag2 win
+        if (self.state[0][2] != '.' and
+                self.state[0][2] == self.state[1][1] and
+                self.state[0][2] == self.state[2][0]):
+            return self.state[0][2]
+        # is the board full, game over?
         for i in range(0, 3):
             for j in range(0, 3):
-                # There's an empty field, we continue the game
-                if self.current_state[i][j] == '.':
-                    return None
-
-        # It's a tie!
+                if self.state[i][j] == '.':
+                    return None  # there is an empty space.
+        # nobody wins.
         return '.'
 
-    # Player 'O' is max, in this case AI
+    #  'O' is assigned as max.
     def max(self):
+        maximum_value = -2  # -1: lose , 0: draw, 1: win
+        proposed_x = None
+        proposed_y = None
 
-        # Possible values for maxv are:
-        # -1 - loss
-        # 0  - a tie
-        # 1  - win
-
-        # We're initially setting it to -2 as worse than the worst case:
-        maxv = -2
-
-        px = None
-        py = None
-
-        result = self.is_end()
-
-        # If the game came to an end, the function needs to return
-        # the evaluation function of the end. That can be:
-        # -1 - loss
-        # 0  - a tie
-        # 1  - win
+        # If the game is over, return the status. i.e return the win/lose/draw value.
+        result = self.check_end()
         if result == 'X':
-            return (-1, 0, 0)
+            return -1, 0, 0
         elif result == 'O':
-            return (1, 0, 0)
+            return 1, 0, 0
         elif result == '.':
-            return (0, 0, 0)
+            return 0, 0, 0
 
         for i in range(0, 3):
             for j in range(0, 3):
-                if self.current_state[i][j] == '.':
-                    # On the empty field player 'O' makes a move and calls Min
-                    # That's one branch of the game tree.
-                    self.current_state[i][j] = 'O'
+                if self.state[i][j] == '.':  # The area is empty, call min to get a single branch of game tree.
+                    self.state[i][j] = 'O'  # act like you played it.
                     (m, min_i, min_j) = self.min()
-                    # Fixing the maxv value if needed
-                    if m > maxv:
-                        maxv = m
-                        px = i
-                        py = j
-                    # Setting back the field to empty
-                    self.current_state[i][j] = '.'
-        return (maxv, px, py)
+                    if m > maximum_value:  # if m is bigger than max, update the max and possible x/y location
+                        maximum_value = m
+                        proposed_x = i
+                        proposed_y = j
+                    self.state[i][j] = '.'  # Revert back to un-played state.
+        return maximum_value, proposed_x, proposed_y
 
-    # Player 'X' is min, in this case human
+    # 'X' is assigned as min.
     def min(self):
+        minimum_value = 2  # -1: win , 0: draw, 1: lose
+        proposed_x = None
+        proposed_y = None
 
-        # Possible values for minv are:
-        # -1 - win
-        # 0  - a tie
-        # 1  - loss
-
-        # We're initially setting it to 2 as worse than the worst case:
-        minv = 2
-
-        qx = None
-        qy = None
-
-        result = self.is_end()
-
+        # If the game is over, return the status. i.e return the win/lose/draw value.
+        result = self.check_end()
         if result == 'X':
-            return (-1, 0, 0)
+            return -1, 0, 0
         elif result == 'O':
-            return (1, 0, 0)
+            return 1, 0, 0
         elif result == '.':
-            return (0, 0, 0)
+            return 0, 0, 0
 
         for i in range(0, 3):
             for j in range(0, 3):
-                if self.current_state[i][j] == '.':
-                    self.current_state[i][j] = 'X'
+                if self.state[i][j] == '.':  # The area is empty, call max to get a single branch of game tree.
+                    self.state[i][j] = 'X'  # act like you played it.
                     (m, max_i, max_j) = self.max()
-                    if m < minv:
-                        minv = m
-                        qx = i
-                        qy = j
-                    self.current_state[i][j] = '.'
+                    if m < minimum_value:  # if m is smaller than min, update the min and possible x/y location
+                        minimum_value = m
+                        proposed_x = i
+                        proposed_y = j
+                    self.state[i][j] = '.'  # Revert back to un-played state.
+        return minimum_value, proposed_x, proposed_y
 
-        return (minv, qx, qy)
+    def max_alpha_beta(self, alpha, beta):  # Generally same as the minimax algo.
+        maximum_value = -2
+        proposed_x = None
+        proposed_y = None
 
-    def max_alpha_beta(self, alpha, beta):
-        maxv = -2
-        px = None
-        py = None
-
-        result = self.is_end()
-
+        result = self.check_end()
         if result == 'X':
-            return (-1, 0, 0)
+            return -1, 0, 0
         elif result == 'O':
-            return (1, 0, 0)
+            return 1, 0, 0
         elif result == '.':
-            return (0, 0, 0)
+            return 0, 0, 0
 
         for i in range(0, 3):
             for j in range(0, 3):
-                if self.current_state[i][j] == '.':
-                    self.current_state[i][j] = 'O'
+                if self.state[i][j] == '.':
+                    self.state[i][j] = 'O'
                     (m, min_i, in_j) = self.min_alpha_beta(alpha, beta)
-                    if m > maxv:
-                        maxv = m
-                        px = i
-                        py = j
-                    self.current_state[i][j] = '.'
+                    if m > maximum_value:
+                        maximum_value = m
+                        proposed_x = i
+                        proposed_y = j
+                    self.state[i][j] = '.'
 
-                    # Next two ifs in Max and Min are the only difference between regular algorithm and minimax
-                    if maxv >= beta:
-                        return (maxv, px, py)
+                    if maximum_value >= beta:
+                        return maximum_value, proposed_x, proposed_y
+                    if maximum_value > alpha:
+                        alpha = maximum_value
 
-                    if maxv > alpha:
-                        alpha = maxv
+        return maximum_value, proposed_x, proposed_y
 
-        return (maxv, px, py)
+    def min_alpha_beta(self, alpha, beta):  # Generally same as the minimax algo.
+        minimum_value = 2
+        proposed_x = None
+        proposed_y = None
 
-    def min_alpha_beta(self, alpha, beta):
-
-        minv = 2
-
-        qx = None
-        qy = None
-
-        result = self.is_end()
-
+        result = self.check_end()
         if result == 'X':
-            return (-1, 0, 0)
+            return -1, 0, 0
         elif result == 'O':
-            return (1, 0, 0)
+            return 1, 0, 0
         elif result == '.':
-            return (0, 0, 0)
+            return 0, 0, 0
 
         for i in range(0, 3):
             for j in range(0, 3):
-                if self.current_state[i][j] == '.':
-                    self.current_state[i][j] = 'X'
+                if self.state[i][j] == '.':
+                    self.state[i][j] = 'X'
                     (m, max_i, max_j) = self.max_alpha_beta(alpha, beta)
-                    if m < minv:
-                        minv = m
-                        qx = i
-                        qy = j
-                    self.current_state[i][j] = '.'
+                    if m < minimum_value:
+                        minimum_value = m
+                        proposed_x = i
+                        proposed_y = j
+                    self.state[i][j] = '.'
 
-                    if minv <= alpha:
-                        return (minv, qx, qy)
+                    if minimum_value <= alpha:
+                        return minimum_value, proposed_x, proposed_y
+                    if minimum_value < beta:
+                        beta = minimum_value
 
-                    if minv < beta:
-                        beta = minv
+        return minimum_value, proposed_x, proposed_y
 
-        return (minv, qx, qy)
-
-    def play_alpha_beta(self):
+    def play_alpha_beta(self):  # plays the game as alpha-beta
         while True:
-            self.draw_board()
-            self.result = self.is_end()
-
+            self.print_state()
+            self.result = self.check_end()
             if self.result != None:
                 if self.result == 'X':
-                    print('The winner is X!')
+                    print('X wins!')
                 elif self.result == 'O':
-                    print('The winner is O!')
+                    print('O wins!')
                 elif self.result == '.':
-                    print("It's a tie!")
-
-                self.initialize_game()
+                    print("Draw!")
                 return
 
-            if self.player_turn == 'X':
-
+            if self.turn == 'X':
                 while True:
-                    print("It's X's turn!")
+                    print("X's turn!")
                     start = time.time()
-                    (m, qx, qy) = self.min_alpha_beta(-2, 2)
+                    (m, proposed_x, proposed_y) = self.min_alpha_beta(-2, 2)
                     end = time.time()
-                    print('Evaluation time: {}s'.format(round(end - start, 7)))
-                    print('Recommended move: X = {}, Y = {}'.format(qx, qy))
-
-                    #px = int(input('Insert the X coordinate: '))
-                    #py = int(input('Insert the Y coordinate: '))
+                    print('Move calculation time: {}s'.format(round(end - start, 7)))
+                    print('Recommended move: X = {}, Y = {}'.format(proposed_x, proposed_y))
                     print("Playing the recommended move...")
 
-                    #qx = px
-                    #qy = py
-
-                    if self.is_valid(qx, qy):
-                        self.current_state[qx][qy] = 'X'
-                        self.player_turn = 'O'
+                    if self.is_valid(proposed_x, proposed_y):
+                        self.state[proposed_x][proposed_y] = 'X'
+                        self.turn = 'O'
                         break
                     else:
-                        print('The move is not valid! Try again.')
-
+                        print('Invalid move.')
             else:
-                print("It's 0's turn!")
-                (m, px, py) = self.max_alpha_beta(-2, 2)
-                print('Playing move: X = {}, Y = {}'.format(px, py))
-                self.current_state[px][py] = 'O'
-                self.player_turn = 'X'
+                print("O's turn!")
+                (m, proposed_x, proposed_y) = self.max_alpha_beta(-2, 2)
+                print('Playing move: X = {}, Y = {}'.format(proposed_x, proposed_y))
+                self.state[proposed_x][proposed_y] = 'O'
+                self.turn = 'X'
 
-    def play(self):
+    def play(self):  # plays the game as minimax
         while True:
-            self.draw_board()
-            self.result = self.is_end()
-
-            # Printing the appropriate message if the game has ended
+            self.print_state()
+            self.result = self.check_end()
             if self.result != None:
                 if self.result == 'X':
-                    print('The winner is X!')
+                    print('X wins!')
                 elif self.result == 'O':
-                    print('The winner is O!')
+                    print('O wins!')
                 elif self.result == '.':
-                    print("It's a tie!")
-
-                self.initialize_game()
+                    print("Draw!")
                 return
 
-            # If it's player's turn
-            if self.player_turn == 'X':
-
+            if self.turn == 'X':
                 while True:
-
                     start = time.time()
-                    (m, qx, qy) = self.min()
+                    (m, proposed_x, proposed_y) = self.min()
                     end = time.time()
-                    print('Evaluation time: {}s'.format(round(end - start, 7)))
-                    print('Recommended move: X = {}, Y = {}'.format(qx, qy))
+                    print('Move calculation time: {}s'.format(round(end - start, 7)))
+                    print('Recommended move: X = {}, Y = {}'.format(proposed_x, proposed_y))
 
-                    px = int(input('Insert the X coordinate: '))
-                    py = int(input('Insert the Y coordinate: '))
-
-                    (qx, qy) = (px, py)
-
-                    if self.is_valid(px, py):
-                        self.current_state[px][py] = 'X'
-                        self.player_turn = 'O'
+                    if self.is_valid(proposed_x, proposed_y):
+                        self.state[proposed_x][proposed_y] = 'X'
+                        self.turn = 'O'
                         break
                     else:
-                        print('The move is not valid! Try again.')
-
-            # If it's AI's turn
+                        print('Invalid move.')
             else:
-                (m, px, py) = self.max()
-                self.current_state[px][py] = 'O'
-                self.player_turn = 'X'
+                (m, proposed_x, proposed_y) = self.max()
+                self.state[proposed_x][proposed_y] = 'O'
+                self.turn = 'X'
 
 
 def main():
     g = Game()
     g.play_alpha_beta()
+    #g.play()
 
 
 if __name__ == "__main__":

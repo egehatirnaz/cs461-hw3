@@ -1,3 +1,8 @@
+"""
+This code uses alpha-beta-pruning to find the optimal solution.
+"""
+
+
 class Game:
     def __init__(self):
         self.turn = 'X'
@@ -58,62 +63,6 @@ class Game:
                     return None  # there is an empty space.
         # nobody wins.
         return '_'
-
-    #  'O' is assigned as max.
-    def max(self):
-        maximum_value = -2  # -1: lose , 0: draw, 1: win
-        proposed_x = None
-        proposed_y = None
-
-        # If the game is over, return the status. i.e return the win/lose/draw value.
-        result = self.check_end()
-        if result == 'X':
-            return -1, 0, 0
-        elif result == 'O':
-            return 1, 0, 0
-        elif result == '_':
-            return 0, 0, 0
-
-        for i in range(0, 3):
-            for j in range(0, 3):
-                # The area is empty, call min to get a single branch of game tree.
-                if self.state[i][j] == '_':
-                    self.state[i][j] = 'O'  # act like you played it.
-                    (m, min_i, min_j) = self.min()
-                    if m > maximum_value:  # if m is bigger than max, update the max and possible x/y location
-                        maximum_value = m
-                        proposed_x = i
-                        proposed_y = j
-                    self.state[i][j] = '.'  # Revert back to un-played state.
-        return maximum_value, proposed_x, proposed_y
-
-    # 'X' is assigned as min.
-    def min(self):
-        minimum_value = 2  # -1: win , 0: draw, 1: lose
-        proposed_x = None
-        proposed_y = None
-
-        # If the game is over, return the status. i.e return the win/lose/draw value.
-        result = self.check_end()
-        if result == 'X':
-            return -1, 0, 0
-        elif result == 'O':
-            return 1, 0, 0
-        elif result == '_':
-            return 0, 0, 0
-
-        for i in range(0, 3):
-            for j in range(0, 3):
-                # The area is empty, call max to get a single branch of game tree.
-                if self.state[i][j] == '_':
-                    self.state[i][j] = 'X'  # act like you played it.
-                    (m, max_i, max_j) = self.max()
-                    if m < minimum_value:  # if m is smaller than min, update the min and possible x/y location
-                        minimum_value = m
-                        proposed_x = i
-                        proposed_y = j
-                    self.state[i][j] = '_'  # Revert back to un-played state.
-        return minimum_value, proposed_x, proposed_y
 
     # Generally same as the minimax algo.
     def max_alpha_beta(self, alpha, beta):
@@ -211,36 +160,6 @@ class Game:
                 (m, proposed_x, proposed_y) = self.max_alpha_beta(-2, 2)
                 print('Playing move: X = {}, Y = {}'.format(
                     proposed_x, proposed_y))
-                self.state[proposed_x][proposed_y] = 'O'
-                self.turn = 'X'
-
-    def play(self):  # plays the game as minimax
-        while True:
-            self.print_state()
-            self.result = self.check_end()
-            if self.result != None:
-                if self.result == 'X':
-                    print('X wins!')
-                elif self.result == 'O':
-                    print('O wins!')
-                elif self.result == '_':
-                    print("Draw!")
-                return
-
-            if self.turn == 'X':
-                while True:
-                    (m, proposed_x, proposed_y) = self.min()
-                    print('Best move: X = {}, Y = {}'.format(
-                        proposed_x, proposed_y))
-
-                    if self.is_valid(proposed_x, proposed_y):
-                        self.state[proposed_x][proposed_y] = 'X'
-                        self.turn = 'O'
-                        break
-                    else:
-                        print('Invalid move.')
-            else:
-                (m, proposed_x, proposed_y) = self.max()
                 self.state[proposed_x][proposed_y] = 'O'
                 self.turn = 'X'
 

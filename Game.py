@@ -147,6 +147,7 @@ class Game:
                     (m, proposed_x, proposed_y) = self.min_alpha_beta(-2, 2)
                     print('Best move: X = {}, Y = {}'.format(
                         proposed_x, proposed_y))
+                    print("State: ", m)
                     print("Playing the best move...")
 
                     if self.is_valid(proposed_x, proposed_y):
@@ -160,6 +161,7 @@ class Game:
                 (m, proposed_x, proposed_y) = self.max_alpha_beta(-2, 2)
                 print('Playing move: X = {}, Y = {}'.format(
                     proposed_x, proposed_y))
+                print("State: ", m)
                 self.state[proposed_x][proposed_y] = 'O'
                 self.turn = 'X'
 
